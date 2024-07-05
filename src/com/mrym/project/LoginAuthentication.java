@@ -119,6 +119,9 @@ public class LoginAuthentication {
                 customer.deposit(details, amountDeposit);
                 break;
             case 3:
+                System.out.println("Transfer Amount: ");
+                double amountTransfer = input.nextDouble();
+                customer.transfer(details, amountTransfer);
                 break;
             default:
                 System.out.println("Invalid Option");

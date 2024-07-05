@@ -1,6 +1,7 @@
 package com.mrym.project;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 public class Customer extends UserDetails implements Bank {
@@ -77,6 +78,125 @@ public class Customer extends UserDetails implements Bank {
 
     @Override
     public boolean transfer(LoginDetails details, double amountTransfer) throws Exception {
+        List<String> transferDetails = StoredDatabase.getUserDetails(details);
+        Scanner input = new Scanner(System.in);
+        Accounts.checkingAccount(details);
+        Accounts.savingAccount(details);
+        double checkingBalance = Accounts.checkingBalance;
+        double savingBalance = Accounts.savingBalance;
+        System.out.println(checkingBalance);
+        if (amountTransfer < 0) {
+            System.out.println("ERROR NEGATIVE NUMBER!");
+            isPositive = false;
+        }
+        System.out.println("where would you like to transfer money to?");
+        System.out.println("1. own account");
+        System.out.println("2. another customer");
+        int answer = input.nextInt();
+        switch (answer) {
+            case 1:
+                System.out.println("select your choice:");
+                System.out.println("1. from checking to saving");
+                System.out.println("2. from saving to checking");
+                int choice = input.nextInt();
+                if (choice == 1) {
+                    double transferBalanceChecking, transferBalanceSaving;
+                    transferBalanceChecking = checkingBalance - amountTransfer;
+                    transferBalanceSaving = savingBalance + amountTransfer;
+                    System.out.println("balance after transfering from checking to saving: \nchecking: " + transferBalanceChecking +
+                            "\nsaving: " + transferBalanceSaving);
+                } else if (choice == 2) {
+                    double transferBalanceChecking, transferBalanceSaving;
+                    transferBalanceSaving = savingBalance - amountTransfer;
+                    transferBalanceChecking = checkingBalance + amountTransfer;
+                    System.out.println("balance after transfering from saving to checking: "+ "\nsaving: " + transferBalanceSaving + "\nchecking: " + transferBalanceChecking);
+                }
+                break;
+            case 2:
+                System.out.println("from which account would you like to transfer from?");
+                System.out.println("1. checking");
+                System.out.println("2. saving");
+                int userTransferChoice = input.nextInt();
+                if(userTransferChoice ==1) {
+                    System.out.println("1. transfer through IBAN");
+                    System.out.println("2. transfer through Phone Number");
+                    int transferChoice = input.nextInt();
+                    if (transferChoice == 1) {
+                        System.out.println("enter IBAN number");
+                        String ibanNum = input.next().toUpperCase();
+                        //
+                        List<String> getAnotherUserIban = StoredDatabase.getUserIBAN(ibanNum);
+                        String checkingIBAN = getAnotherUserIban.get(6);
+                        String savingIBAN = getAnotherUserIban.get(7);
+                        double checking = Double.parseDouble(getAnotherUserIban.get(3));
+                        double saving = Double.parseDouble(getAnotherUserIban.get(4));
+                        if (ibanNum.equals(checkingIBAN)) {
+                            double transferToAnother = checking + amountTransfer;
+                            System.out.println("amount transferred to: " + ibanNum + " checking account");
+                        } else if (ibanNum.equals(savingIBAN)) {
+                            double transferToAnother = saving + amountTransfer;
+                            System.out.println("amount transferred to: " + ibanNum + " saving account");
+                        } else {
+                            System.out.println("IBAN doesn't exist");
+                        }
+                        double transferChecking = Double.parseDouble(transferDetails.get(3));
+                        double currentBalance = transferChecking - amountTransfer;
+                        System.out.println("your current balance for checking account is: " + currentBalance);
+                    } else if (transferChoice == 2) {
+                        System.out.println("enter phone number");
+                        String phoneNum = input.next().toUpperCase();
+                        //
+                        List<String> getAnotherUserPhone = StoredDatabase.getUserPhoneNumber(Integer.parseInt(phoneNum));
+                        double checking = Double.parseDouble(getAnotherUserPhone.get(3));
+                        double transferToAnother = checking + amountTransfer;
+                        System.out.println("amount transferred to: " + phoneNum);
+                        double transferChecking = Double.parseDouble(transferDetails.get(3));
+                        double currentBalance = transferChecking - amountTransfer;
+                        System.out.println("your current balance for checking account is: " + currentBalance);
+                    }
+                }
+                if(userTransferChoice == 2) {
+                    System.out.println("1. transfer through IBAN");
+                    System.out.println("2. transfer through Phone Number");
+                    int transferChoice = input.nextInt();
+                    if (transferChoice == 1) {
+                        System.out.println("enter IBAN number");
+                        String ibanNum = input.next().toUpperCase();
+                        //
+                        List<String> getAnotherUserIban = StoredDatabase.getUserIBAN(ibanNum);
+                        String checkingIBAN = getAnotherUserIban.get(6);
+                        String savingIBAN = getAnotherUserIban.get(7);
+                        double checking = Double.parseDouble(getAnotherUserIban.get(3));
+                        double saving = Double.parseDouble(getAnotherUserIban.get(4));
+                        if (ibanNum.equals(checkingIBAN)) {
+                            double transferToAnother = checking + amountTransfer;
+                            System.out.println("amount transferred to: " + ibanNum + " checking account");
+                        } else if (ibanNum.equals(savingIBAN)) {
+                            double transferToAnother = saving + amountTransfer;
+                            System.out.println("amount transferred to: " + ibanNum + " saving account");
+                        } else {
+                            System.out.println("IBAN doesn't exist");
+                        }
+                        double transferSaving = Double.parseDouble(transferDetails.get(4));
+                        double currentBalance = transferSaving - amountTransfer;
+                        System.out.println("your current balance for saving account is: " + currentBalance);
+                    } else if (transferChoice == 2) {
+                        System.out.println("enter phone number");
+                        String phoneNum = input.next().toUpperCase();
+                        //
+                        List<String> getAnotherUserPhone = StoredDatabase.getUserPhoneNumber(Integer.parseInt(phoneNum));
+                        double saving = Double.parseDouble(getAnotherUserPhone.get(4));
+                        double transferToAnother = saving + amountTransfer;
+                        System.out.println("amount transferred to: " + phoneNum);
+                        double transferSaving = Double.parseDouble(transferDetails.get(4));
+                        double currentBalance = transferSaving - amountTransfer;
+                        System.out.println("your current balance for saving account is: " + currentBalance);
+                    }
+                }
+                break;
+            default:
+                System.out.println("ERROR! INVALID CHOICE");
+        }
         return false;
     }
 
