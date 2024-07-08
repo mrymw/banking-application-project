@@ -3,3 +3,4 @@ This project is a comprehensive Java Banking Application designed with a command
 
 # Technologies Used
 - StringJoiner
+- AES Algorithm for Encryption and Decryption of Passwords (youtube link: https://www.youtube.com/watch?v=L8LeYbztZxo&list=PLtgomJ95NvbPDMQClkBZPijLdEFyo0VHa&index=2)
