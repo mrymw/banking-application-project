@@ -8,5 +8,9 @@ This project is a comprehensive Java Banking Application designed with a command
 - Interface (Bank)
 - Enum (Type Of Cards)
 
+# Favorite Functions
+- Transfer Function :
+  I like how the functionality actually works from transferring fron one user to another in such a simple way. 
+
 # Notes
 - The database.txt file stores password in encrypted manner, hence I have created actualUserPassword.txt which includes the userID with their actual passwords.
