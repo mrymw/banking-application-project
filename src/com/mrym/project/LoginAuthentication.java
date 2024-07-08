@@ -1,7 +1,7 @@
 package com.mrym.project;
 import java.util.List;
 import java.util.Scanner;
-public class LoginAuthentication {
+public class LoginAuthentication extends UserDetails{
     private static final int maxAttempts = 3;
     static String userName;
     static String userPassword;
@@ -20,6 +20,8 @@ public class LoginAuthentication {
         if (userName.equals(userDetails.getUserName()) && userPassword.equals(userDetails.getUserPassword())) {
             System.out.println("user found");
             if (userRole.equals("C")) {
+                StoredDatabase database = new StoredDatabase();
+                database.setCardPin(userDetails);
                 userCustomer(userDetails);
             } else if (userRole.equals("B")) {
                 userBanker(userDetails);
@@ -33,6 +35,8 @@ public class LoginAuthentication {
                 String attemptPassword = input.next();
                 if (userName.equals(attemptUsername) && userPassword.equals(attemptPassword)) {
                     if (userRole.equals("C")) {
+                        StoredDatabase database = new StoredDatabase();
+                        database.setCardPin(userDetails);
                         userCustomer(userDetails);
                     } else if (userRole.equals("B")) {
                         userBanker(userDetails);
@@ -51,7 +55,7 @@ public class LoginAuthentication {
     public static void userBanker (LoginDetails details) throws Exception {
         Banker banker = new Banker();
         Scanner input = new Scanner(System.in);
-        System.out.println("Welcome Banker");
+        System.out.println("\nWelcome Banker");
         System.out.println("What would you like to do today?");
         System.out.println("1. Add a new customer");
         System.out.println("2. Withdraw Money");
@@ -86,7 +90,7 @@ public class LoginAuthentication {
                 TypesOfCards savingCard = TypesOfCards.valueOf(input.next().toUpperCase());
                 System.out.println("Customer Phone Number: ");
                 String phoneNum = input.next();
-                UserDetails userDetails = new UserDetails(id, first, last, encryptMessage, checking, saving, checkingIBAN, savingIBAN, checkingCard, savingCard, phoneNum);
+                LoginAuthentication userDetails = new LoginAuthentication(id,first,last,encryptMessage,checking,saving,checkingIBAN,savingIBAN,checkingCard,savingCard,phoneNum);
                 try {
                     Banker.addCustomer(userDetails);
                 } catch (Exception e) {
@@ -114,7 +118,7 @@ public class LoginAuthentication {
     }
     public static void userCustomer (LoginDetails details) throws Exception {
         Scanner input = new Scanner(System.in);
-        System.out.println("Welcome Customer");
+        System.out.println("\nWelcome Customer");
         System.out.println("What would you like to do today?");
         System.out.println("1. Withdraw Money");
         System.out.println("2. Deposit Money");
@@ -140,5 +144,8 @@ public class LoginAuthentication {
             default:
                 System.out.println("Invalid Option");
         }
+    }
+    public LoginAuthentication (int userID, String userFirstName, String userLastName, String userPassword, double checkingAccountBalance, double savingAccountBalance, String checkingIBAN, String savingIBAN, TypesOfCards checkingCards, TypesOfCards savingCards, String phoneNumber) {
+        super(userID, userFirstName, userLastName, userPassword, checkingAccountBalance, savingAccountBalance, checkingIBAN, savingIBAN, checkingCards, savingCards, phoneNumber);
     }
 }

@@ -32,4 +32,5 @@ public class Encryption {
         System.err.println("SecretKey: " + encode(secretKey.getEncoded()));
         System.err.println("IV: " + encode(IV));
     }
+
 }

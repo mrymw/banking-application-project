@@ -1,5 +1,5 @@
 package com.mrym.project;
-public class UserDetails {
+public abstract class UserDetails {
     private int userID;
     private String userFirstName;
     private String userLastName;
@@ -11,6 +11,8 @@ public class UserDetails {
     private TypesOfCards checkingCards;
     private TypesOfCards savingCards;
     private String phoneNumber;
+    private int overdraftCount;
+    private boolean isAccountActive;
 
     public UserDetails(int userID, String userFirstName, String userLastName, String userPassword, double checkingAccountBalance, double savingAccountBalance, String checkingIBAN, String savingIBAN, TypesOfCards checkingCards, TypesOfCards savingCards, String phoneNumber) {
         this.userID = userID;
@@ -24,9 +26,29 @@ public class UserDetails {
         this.checkingCards = checkingCards;
         this.savingCards = savingCards;
         this.phoneNumber = phoneNumber;
+        this.overdraftCount = 0;
+        this.isAccountActive = true;
     }
 
     public UserDetails() {
+        this.overdraftCount = 0;
+        this.isAccountActive = true;
+    }
+
+    public int getOverdraftCount() {
+        return overdraftCount;
+    }
+
+    public void setOverdraftCount(int overdraftCount) {
+        this.overdraftCount = overdraftCount;
+    }
+
+    public boolean isAccountActive() {
+        return isAccountActive;
+    }
+
+    public void setAccountActive(boolean accountActive) {
+        isAccountActive = accountActive;
     }
 
     public String getCheckingIBAN() {

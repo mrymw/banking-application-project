@@ -10,5 +10,6 @@ public class Main {
         String userPassword = input.next();
         LoginDetails details = new LoginDetails(userName, userPassword);
         LoginAuthentication.authentication(details);
+
     }
 }
