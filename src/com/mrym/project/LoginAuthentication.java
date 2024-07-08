@@ -6,6 +6,7 @@ public class LoginAuthentication {
     static String userName;
     static String userPassword;
     static String userRole;
+    static Encryption encryption = new Encryption();
     public static void authentication(LoginDetails userDetails) throws Exception {
         Scanner input = new Scanner(System.in);
         List<String> details = StoredDatabase.getUserDetails(userDetails);
@@ -68,11 +69,24 @@ public class LoginAuthentication {
                 String last = input.next();
                 System.out.println("Customer Initial Password: ");
                 String password = input.next();
+                // performing encryption
+                encryption.initFromStrings("w/cTbFoEzK05F5EnhWjCIw==", "/8StF0Ez9/YSizIL");
+                String encryptMessage = encryption.encrypt(password);
                 System.out.println("Customer Checking Account Balance: ");
                 double checking = input.nextDouble();
                 System.out.println("Customer Saving Account Balance: ");
                 double saving = input.nextDouble();
-                UserDetails userDetails = new UserDetails(id, first, last, password, checking, saving);
+                System.out.println("Customer Checking Account IBAN: ");
+                String checkingIBAN = input.next();
+                System.out.println("Customer Saving Account IBAN: ");
+                String savingIBAN = input.next();
+                System.out.println("Customer Checking Card: ");
+                TypesOfCards checkingCard = TypesOfCards.valueOf(input.next().toUpperCase());
+                System.out.println("Customer Saving Card: ");
+                TypesOfCards savingCard = TypesOfCards.valueOf(input.next().toUpperCase());
+                System.out.println("Customer Phone Number: ");
+                String phoneNum = input.next();
+                UserDetails userDetails = new UserDetails(id, first, last, encryptMessage, checking, saving, checkingIBAN, savingIBAN, checkingCard, savingCard, phoneNum);
                 try {
                     Banker.addCustomer(userDetails);
                 } catch (Exception e) {

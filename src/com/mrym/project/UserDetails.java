@@ -6,18 +6,67 @@ public class UserDetails {
     private String userPassword;
     private double checkingAccountBalance;
     private double savingAccountBalance;
+    private String checkingIBAN;
+    private String savingIBAN;
+    private TypesOfCards checkingCards;
+    private TypesOfCards savingCards;
+    private String phoneNumber;
 
-    public UserDetails(int userID, String userFirstName, String userLastName,String userPassword, double checkingAccountBalance, double savingAccountBalance) {
+    public UserDetails(int userID, String userFirstName, String userLastName, String userPassword, double checkingAccountBalance, double savingAccountBalance, String checkingIBAN, String savingIBAN, TypesOfCards checkingCards, TypesOfCards savingCards, String phoneNumber) {
         this.userID = userID;
         this.userFirstName = userFirstName;
         this.userLastName = userLastName;
         this.userPassword = userPassword;
         this.checkingAccountBalance = checkingAccountBalance;
         this.savingAccountBalance = savingAccountBalance;
+        this.checkingIBAN = checkingIBAN;
+        this.savingIBAN = savingIBAN;
+        this.checkingCards = checkingCards;
+        this.savingCards = savingCards;
+        this.phoneNumber = phoneNumber;
     }
 
     public UserDetails() {
+    }
 
+    public String getCheckingIBAN() {
+        return checkingIBAN;
+    }
+
+    public void setCheckingIBAN(String checkingIBAN) {
+        this.checkingIBAN = checkingIBAN;
+    }
+
+    public String getSavingIBAN() {
+        return savingIBAN;
+    }
+
+    public void setSavingIBAN(String savingIBAN) {
+        this.savingIBAN = savingIBAN;
+    }
+
+    public TypesOfCards getCheckingCards() {
+        return checkingCards;
+    }
+
+    public void setCheckingCards(TypesOfCards checkingCards) {
+        this.checkingCards = checkingCards;
+    }
+
+    public TypesOfCards getSavingCards() {
+        return savingCards;
+    }
+
+    public void setSavingCards(TypesOfCards savingCards) {
+        this.savingCards = savingCards;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String getUserPassword() {

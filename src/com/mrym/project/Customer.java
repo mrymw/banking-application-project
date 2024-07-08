@@ -29,6 +29,8 @@ public class Customer extends UserDetails implements Bank {
                 transactionHistory.add("amount withdrawn from checking account: ");
                 transactionHistory.add(Arrays.toString(new double[] {balanceWithdrawChecking}));
                 System.out.println("amount successfully withdrawn: \nbalance before: " + checkingBalance +"\nbalance after:  "+ balanceWithdrawChecking);
+            } else {
+                overdraftProtection(details, amountWithdraw, "checking");
             }
         } else if (answer.equals("saving")) {
             double balanceWithdrawSaving;
@@ -37,11 +39,12 @@ public class Customer extends UserDetails implements Bank {
                 transactionHistory.add("amount withdrawn from saving account: ");
                 transactionHistory.add(Arrays.toString(new double[] {balanceWithdrawSaving}));
                 System.out.println("amount successfully withdrawn: \nbalance before: " + savingBalance +"\nbalance after:  "+ balanceWithdrawSaving);
+            } else {
+                overdraftProtection(details, amountWithdraw, "saving");
             }
         }
         return isPositive;
     }
-
     @Override
     public boolean deposit(LoginDetails details, double amountDeposit) throws Exception{
         Scanner input = new Scanner(System.in);
@@ -109,7 +112,7 @@ public class Customer extends UserDetails implements Bank {
                     double transferBalanceChecking, transferBalanceSaving;
                     transferBalanceSaving = savingBalance - amountTransfer;
                     transferBalanceChecking = checkingBalance + amountTransfer;
-                    System.out.println("balance after transfering from saving to checking: "+ "\nsaving: " + transferBalanceSaving + "\nchecking: " + transferBalanceChecking);
+                    System.out.println("balance after transferring from saving to checking: "+ "\nsaving: " + transferBalanceSaving + "\nchecking: " + transferBalanceChecking);
                 }
                 break;
             case 2:
@@ -146,7 +149,7 @@ public class Customer extends UserDetails implements Bank {
                         System.out.println("enter phone number");
                         String phoneNum = input.next().toUpperCase();
                         //
-                        List<String> getAnotherUserPhone = StoredDatabase.getUserPhoneNumber(Integer.parseInt(phoneNum));
+                        List<String> getAnotherUserPhone = StoredDatabase.getUserPhoneNumber(phoneNum);
                         double checking = Double.parseDouble(getAnotherUserPhone.get(3));
                         double transferToAnother = checking + amountTransfer;
                         System.out.println("amount transferred to: " + phoneNum);
@@ -184,7 +187,7 @@ public class Customer extends UserDetails implements Bank {
                         System.out.println("enter phone number");
                         String phoneNum = input.next().toUpperCase();
                         //
-                        List<String> getAnotherUserPhone = StoredDatabase.getUserPhoneNumber(Integer.parseInt(phoneNum));
+                        List<String> getAnotherUserPhone = StoredDatabase.getUserPhoneNumber(phoneNum);
                         double saving = Double.parseDouble(getAnotherUserPhone.get(4));
                         double transferToAnother = saving + amountTransfer;
                         System.out.println("amount transferred to: " + phoneNum);
@@ -199,10 +202,32 @@ public class Customer extends UserDetails implements Bank {
         }
         return false;
     }
-
     @Override
-    public void showBalance() {
-
+    public void showBalance() {}
+    @Override
+    public void overdraftProtection(LoginDetails loginDetails, double amountWithdraw, String choice) throws Exception {
+        switch (choice) {
+            case "checking":
+                double checkingBalance = Accounts.checkingBalance;
+                if (checkingBalance < 0 && amountWithdraw > 100) {
+                    System.out.println("Can not withdraw more than 100$ if account balance is negative!!");
+                } else if (checkingBalance < 0 && amountWithdraw > checkingBalance) {
+                    double overdraftCharge = amountWithdraw + 35;
+                    double balanceWithdrawChecking = checkingBalance - overdraftCharge;
+                    System.out.println("you have withdrawn more than available from your account: " + amountWithdraw + "your current balance after overdraft protection fee is: " + balanceWithdrawChecking);
+                }
+            case "saving":
+                double savingBalance = Accounts.savingBalance;
+                if (savingBalance < 0 && amountWithdraw > 100) {
+                    System.out.println("Can not withdraw more than 100$ if account balance is negative!!");
+                } else if (savingBalance < 0 && amountWithdraw > savingBalance) {
+                    double overdraftCharge = amountWithdraw + 35;
+                    double balanceWithdrawSaving = savingBalance - overdraftCharge;
+                    System.out.println("you have withdrawn more than available from your account: " + amountWithdraw + "your current balance after overdraft protection fee is: " + balanceWithdrawSaving);
+                }
+            default:
+                System.out.println("ERROR!");
+        }
     }
 
 }
