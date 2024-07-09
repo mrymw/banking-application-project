@@ -5,5 +5,5 @@ public interface Bank {
     boolean deposit(LoginDetails details, double amountDeposit) throws Exception;
     boolean transfer(LoginDetails details, double amountTransfer) throws Exception;
     void overdraftProtection(LoginDetails loginDetails, double amountWithdraw) throws Exception;
-    void showBalance();
+    void detailedAccountStatement(LoginDetails userDetails) throws Exception;
 }

@@ -3,10 +3,20 @@ package com.mrym.project;
 public class LoginDetails {
     private String userName;
     private String userPassword;
-    public LoginDetails(String userName, String userPassword) {
+    private int userId;
+    public LoginDetails(int userId, String userName, String userPassword) {
+        this.userId=userId;
         this.userName = userName;
         this.userPassword = userPassword;
     }
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
     public String getUserName() {
         return userName;
     }

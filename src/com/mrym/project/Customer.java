@@ -1,8 +1,10 @@
 package com.mrym.project;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import javax.swing.text.DateFormatter;
+import java.io.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,7 +12,42 @@ import java.util.Scanner;
 
 public class Customer extends UserDetails implements Bank {
     boolean isPositive;
-    protected ArrayList<String> transactionHistory = new ArrayList<>();
+    static String userName;
+    static int userID;
+    List<String> userData = new ArrayList<>();
+    static String fileName;
+    private void displayTransactionData(String userName, int userID, String transactionType, double amount, double balanceAfter, String accountType) throws IOException {
+        fileName = userName + userID + ".txt";
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName, true))) {
+            //display current date of the transaction
+            LocalTime localTime = LocalTime.now();
+            LocalDate localDate = LocalDate.now();
+            String transactionDetails = String.format("%s, %s, %s, %.2f, %.2f%n, %s", localDate, localTime,  transactionType, amount, balanceAfter, accountType);
+            bufferedWriter.write(transactionDetails);
+        }
+    }
+    @Override
+    public void detailedAccountStatement(LoginDetails userDetails) throws Exception {
+        List<String> details = StoredDatabase.getUserDetails(userDetails);
+        if (details.isEmpty()) {
+            System.out.println("user not found");
+            return;
+        }
+        String userName = details.get(1);
+        int userID = Integer.parseInt(details.get(0));
+        double checkingAccountBalance = Double.parseDouble(details.get(3));
+        double savingAccountBalance = Double.parseDouble(details.get(4));
+        String fileName = userName + userID + ".txt";
+        try(BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))){
+            String line;
+            System.out.println("Detailed Account Statement: ");
+            while((line = bufferedReader.readLine()) != null) {
+                System.out.println(line);
+            }
+            System.out.println("Closing balance for checking account: " + checkingAccountBalance);
+            System.out.println("Closing balance for saving account: " + savingAccountBalance);
+        }
+    }
     public Customer (){super();}
     @Override
     public boolean withdraw(LoginDetails details, double amountWithdraw) throws Exception {
@@ -24,16 +61,21 @@ public class Customer extends UserDetails implements Bank {
             while ((user = bufferedReader.readLine()) != null) {
                 List<String> databaseDetails = new ArrayList<>(Arrays.asList(user.split(",")));
                 if (databaseDetails.size() > 12) {
-                    String userName = databaseDetails.get(1).concat(databaseDetails.get(2));
+                    userName = databaseDetails.get(1).concat(databaseDetails.get(2));
+                    userID = Integer.parseInt(databaseDetails.get(0));
                     if (details.getUserName().equals(userName)) {
                         userFound = true;
                         withdrawList = databaseDetails;
+                        userData.add(userName);
+                        userData.add(String.valueOf(userID));
                     }
                 }
                 database.add(databaseDetails);
             }
         }
         if (userFound) {
+            String userName = userData.get(0);
+            int userID = Integer.parseInt(userData.get(1));
             Accounts.checkingAccount(details);
             Accounts.savingAccount(details);
             double checkingBalance = Accounts.checkingBalance;
@@ -51,9 +93,9 @@ public class Customer extends UserDetails implements Bank {
                     balanceWithdrawChecking = checkingBalance - amountWithdraw;
                     //updating amount in file
                     withdrawList.set(4, String.valueOf(balanceWithdrawChecking));
-                    transactionHistory.add("amount withdrawn from checking account: ");
-                    transactionHistory.add(Arrays.toString(new double[]{balanceWithdrawChecking}));
                     System.out.println("amount successfully withdrawn: \nbalance before: " + checkingBalance + "\nbalance after:  " + balanceWithdrawChecking);
+                    //adding it in user file
+                    displayTransactionData(userName, userID, "withdraw", amountWithdraw, balanceWithdrawChecking, "checking");
                 } else {
                     overdraftProtection(details, amountWithdraw);
                 }
@@ -62,9 +104,8 @@ public class Customer extends UserDetails implements Bank {
                 if (savingBalance >= amountWithdraw) {
                     balanceWithdrawSaving = savingBalance - amountWithdraw;
                     withdrawList.set(5, String.valueOf(balanceWithdrawSaving));
-                    transactionHistory.add("amount withdrawn from saving account: ");
-                    transactionHistory.add(Arrays.toString(new double[]{balanceWithdrawSaving}));
                     System.out.println("amount successfully withdrawn: \nbalance before: " + savingBalance + "\nbalance after:  " + balanceWithdrawSaving);
+                    displayTransactionData(userName, userID, "withdraw", amountWithdraw, balanceWithdrawSaving, "saving");
                 } else {
                     System.out.println("AN ERROR OCCURED PLEASE TRY AGAIN LATER!");
                 }
@@ -91,19 +132,27 @@ public class Customer extends UserDetails implements Bank {
             while ((user = bufferedReader.readLine()) != null) {
                 List<String> databaseDetails = new ArrayList<>(Arrays.asList(user.split(",")));
                 if (databaseDetails.size() > 12) {
-                    String userName = databaseDetails.get(1).concat(databaseDetails.get(2));
+                    userName = databaseDetails.get(1).concat(databaseDetails.get(2));
+                    userID = Integer.parseInt(databaseDetails.get(0));
                     if (details.getUserName().equals(userName)) {
                         userFound = true;
                         depositList = databaseDetails;
+                        userData.add(userName);
+                        userData.add(String.valueOf(userID));
                     }
                 }
                 database.add(databaseDetails);
             }
         }
+        if (!userFound) {
+            System.out.println("User not found!");
+        }
         Accounts.checkingAccount(details);
         Accounts.savingAccount(details);
         double checkingBalance = Accounts.checkingBalance;
         double savingBalance = Accounts.savingBalance;
+        String userName = userData.get(0);
+        int userID = Integer.parseInt(userData.get(1));
         System.out.println(checkingBalance);
         if (amountDeposit < 0) {
             System.out.println("ERROR NEGATIVE NUMBER!");
@@ -116,18 +165,18 @@ public class Customer extends UserDetails implements Bank {
             if (checkingBalance >= amountDeposit){
                 balanceDepositChecking = checkingBalance + amountDeposit;
                 depositList.set(4, String.valueOf(balanceDepositChecking));
-                transactionHistory.add("amount deposit to checking account: ");
-                transactionHistory.add(Arrays.toString(new double[] {balanceDepositChecking}));
                 System.out.println("amount successfully deposit: \nbalance before: " + checkingBalance +"\nbalance after:  "+ balanceDepositChecking);
+                displayTransactionData(userName, userID, "deposit", amountDeposit, balanceDepositChecking, "checking");
+
             }
         } else if (answer.equals("saving")) {
             double balanceDepositSaving;
             if (savingBalance >= amountDeposit) {
                 balanceDepositSaving = savingBalance - amountDeposit;
                 depositList.set(5, String.valueOf(balanceDepositSaving));
-                transactionHistory.add("amount deposit to saving account: ");
-                transactionHistory.add(Arrays.toString(new double[] {balanceDepositSaving}));
                 System.out.println("amount successfully deposit: \nbalance before: " + savingBalance +"\nbalance after:  "+ balanceDepositSaving);
+                displayTransactionData(userName, userID, "deposit", amountDeposit, balanceDepositSaving, "saving");
+
             }
         }
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("database.txt"))) {
@@ -154,10 +203,13 @@ public class Customer extends UserDetails implements Bank {
             while ((user = bufferedReader.readLine()) != null) {
                 List<String> databaseDetails = new ArrayList<>(Arrays.asList(user.split(",")));
                 if (databaseDetails.size() > 12) {
-                    String userName = databaseDetails.get(1).concat(databaseDetails.get(2));
+                    userName = databaseDetails.get(1).concat(databaseDetails.get(2));
+                    userID = Integer.parseInt(databaseDetails.get(0));
                     if (details.getUserName().equals(userName)) {
                         userFound = true;
                         transferList = databaseDetails;
+                        userData.add(userName);
+                        userData.add(String.valueOf(userID));
                     }
                 }
                 database.add(databaseDetails);
@@ -167,6 +219,8 @@ public class Customer extends UserDetails implements Bank {
         if (!userFound) {
             throw new Exception("User not found in database");
         }
+        String userName = userData.get(0);
+        int userID = Integer.parseInt(userData.get(1));
         Accounts.checkingAccount(details);
         Accounts.savingAccount(details);
         double checkingBalance = Accounts.checkingBalance;
@@ -194,6 +248,8 @@ public class Customer extends UserDetails implements Bank {
                     transferList.set(5, String.valueOf(transferBalanceSaving));
                     System.out.println("Balance after transferring from checking to saving: \nChecking: " + transferBalanceChecking +
                             "\nSaving: " + transferBalanceSaving);
+                    displayTransactionData(userName, userID, "transfer", amountTransfer, transferBalanceChecking, "checking");
+                    displayTransactionData(userName, userID, "transfer", amountTransfer, transferBalanceSaving, "saving");
                 } else if (choice == 2) {
                     double transferBalanceSaving = savingBalance - amountTransfer;
                     double transferBalanceChecking = checkingBalance + amountTransfer;
@@ -201,6 +257,8 @@ public class Customer extends UserDetails implements Bank {
                     transferList.set(4, String.valueOf(transferBalanceChecking));
                     System.out.println("Balance after transferring from saving to checking: \nSaving: " + transferBalanceSaving +
                             "\nChecking: " + transferBalanceChecking);
+                    displayTransactionData(userName, userID, "transfer", amountTransfer, transferBalanceSaving, "saving");
+                    displayTransactionData(userName, userID, "transfer", amountTransfer, transferBalanceChecking, "checking");
                 }
                 break;
             case 2:
@@ -218,19 +276,24 @@ public class Customer extends UserDetails implements Bank {
                         for (List<String> userRecord : database) {
                             String checkingIBAN = userRecord.get(7);
                             String savingIBAN = userRecord.get(8);
+                            String anotherUserName = userRecord.get(1).concat(userRecord.get(2));
+                            int anotherUserID = Integer.parseInt(userRecord.get(0));
                             if (ibanNum.equals(checkingIBAN) || ibanNum.equals(savingIBAN)) {
                                 recipientFound = true;
                                 if (ibanNum.equals(checkingIBAN)) {
                                     double anotherUserCheckingAccount = Double.parseDouble(userRecord.get(4)) + amountTransfer;
                                     userRecord.set(4, String.valueOf(anotherUserCheckingAccount));
                                     System.out.println("Amount transferred to: " + ibanNum + " checking account: " + anotherUserCheckingAccount);
+                                    displayTransactionData(anotherUserName, anotherUserID, "transfer", amountTransfer, anotherUserCheckingAccount, "checking");
                                 } else {
                                     double anotherUserSavingAccount = Double.parseDouble(userRecord.get(5)) + amountTransfer;
                                     userRecord.set(5, String.valueOf(anotherUserSavingAccount));
                                     System.out.println("Amount transferred to: " + ibanNum + " saving account: " + anotherUserSavingAccount);
+                                    displayTransactionData(anotherUserName, anotherUserID, "transfer", amountTransfer, anotherUserSavingAccount, "saving");
                                 }
                                 double transferCurrentUserChecking = Double.parseDouble(transferList.get(4)) - amountTransfer;
                                 transferList.set(4, String.valueOf(transferCurrentUserChecking));
+                                displayTransactionData(userName, userID, "transfer", amountTransfer, transferCurrentUserChecking, "checking");
                                 System.out.println("Your current balance for checking account is: " + transferCurrentUserChecking);
                                 break;
                             }
@@ -242,15 +305,19 @@ public class Customer extends UserDetails implements Bank {
                         System.out.println("Enter phone number:");
                         String phoneNum = input.next().toUpperCase();
                         for (List<String> userRecord : database) {
-                            String recipientPhoneNum = userRecord.get(11); // Assuming phone number is at index 8
+                            String recipientPhoneNum = userRecord.get(11);
+                            String anotherUserName = userRecord.get(1).concat(userRecord.get(2));
+                            int anotherUserID = Integer.parseInt(userRecord.get(0));
                             if (phoneNum.equals(recipientPhoneNum)) {
                                 recipientFound = true;
                                 double anotherUserCheckingAccount = Double.parseDouble(userRecord.get(4)) + amountTransfer;
                                 userRecord.set(4, String.valueOf(anotherUserCheckingAccount));
+                                displayTransactionData(anotherUserName, anotherUserID, "transfer", amountTransfer, anotherUserCheckingAccount, "checking");
                                 double transferCurrentUserChecking = Double.parseDouble(transferList.get(4)) - amountTransfer;
                                 transferList.set(4, String.valueOf(transferCurrentUserChecking));
                                 System.out.println("Amount transferred to: " + phoneNum + " checking account");
                                 System.out.println("Your current balance for checking account is: " + transferCurrentUserChecking);
+                                displayTransactionData(userName, userID, "transfer", amountTransfer, transferCurrentUserChecking, "checking");
                                 break;
                             }
                         }
@@ -269,20 +336,26 @@ public class Customer extends UserDetails implements Bank {
                         for (List<String> userRecord : database) {
                             String checkingIBAN = userRecord.get(7);
                             String savingIBAN = userRecord.get(8);
+                            String anotherUserName = userRecord.get(1).concat(userRecord.get(2));
+                            int anotherUserID = Integer.parseInt(userRecord.get(0));
                             if (ibanNum.equals(checkingIBAN) || ibanNum.equals(savingIBAN)) {
                                 recipientFound = true;
                                 if (ibanNum.equals(checkingIBAN)) {
                                     double anotherUserCheckingAccount = Double.parseDouble(userRecord.get(4)) + amountTransfer;
                                     userRecord.set(4, String.valueOf(anotherUserCheckingAccount));
                                     System.out.println("Amount transferred to: " + ibanNum + " checking account: " + anotherUserCheckingAccount);
+                                    displayTransactionData(anotherUserName, anotherUserID, "transfer", amountTransfer, anotherUserCheckingAccount, "checking");
                                 } else {
                                     double anotherUserSavingAccount = Double.parseDouble(userRecord.get(5)) + amountTransfer;
                                     userRecord.set(5, String.valueOf(anotherUserSavingAccount));
                                     System.out.println("Amount transferred to: " + ibanNum + " saving account: " + anotherUserSavingAccount);
+                                    displayTransactionData(anotherUserName, anotherUserID, "transfer", amountTransfer, anotherUserSavingAccount, "saving");
+
                                 }
                                 double transferCurrentSavingAccount = Double.parseDouble(transferList.get(5)) - amountTransfer;
                                 transferList.set(5, String.valueOf(transferCurrentSavingAccount));
                                 System.out.println("Your current balance for saving account is: " + transferCurrentSavingAccount);
+                                displayTransactionData(userName, userID, "transfer", amountTransfer, transferCurrentSavingAccount, "saving");
                                 break;
                             }
                         }
@@ -293,15 +366,19 @@ public class Customer extends UserDetails implements Bank {
                         System.out.println("Enter phone number:");
                         String phoneNum = input.next().toUpperCase();
                         for (List<String> userRecord : database) {
-                            String recipientPhoneNum = userRecord.get(12); // Assuming phone number is at index 8
+                            String recipientPhoneNum = userRecord.get(11);
+                            String anotherUserName = userRecord.get(1).concat(userRecord.get(2));
+                            int anotherUserID = Integer.parseInt(userRecord.get(0));
                             if (phoneNum.equals(recipientPhoneNum)) {
                                 recipientFound = true;
                                 double anotherUserSavingAccount = Double.parseDouble(userRecord.get(5)) + amountTransfer;
                                 userRecord.set(5, String.valueOf(anotherUserSavingAccount));
+                                displayTransactionData(anotherUserName, anotherUserID, "transfer", amountTransfer, anotherUserSavingAccount, "saving");
                                 double transferCurrentSavingAccount = Double.parseDouble(transferList.get(5)) - amountTransfer;
                                 transferList.set(5, String.valueOf(transferCurrentSavingAccount));
                                 System.out.println("Amount transferred to: " + phoneNum + " saving account");
                                 System.out.println("Your current balance for saving account is: " + transferCurrentSavingAccount);
+                                displayTransactionData(userName, userID, "transfer", amountTransfer, transferCurrentSavingAccount, "saving");
                                 break;
                             }
                         }
@@ -323,8 +400,7 @@ public class Customer extends UserDetails implements Bank {
         }
         return true;
     }
-    @Override
-    public void showBalance() {}
+
     @Override
     public void overdraftProtection(LoginDetails loginDetails, double amountWithdraw) throws Exception {
         List<String> overDraftList = new ArrayList<>();
@@ -336,16 +412,21 @@ public class Customer extends UserDetails implements Bank {
             while ((user = bufferedReader.readLine()) != null) {
                 List<String> databaseDetails = new ArrayList<>(Arrays.asList(user.split(",")));
                 if (databaseDetails.size() > 12) {
-                    String userName = databaseDetails.get(1).concat(databaseDetails.get(2));
+                    userName = databaseDetails.get(1).concat(databaseDetails.get(2));
+                    userID = Integer.parseInt(databaseDetails.get(0));
                     if (loginDetails.getUserName().equals(userName)) {
                         userFound = true;
                         overDraftList = databaseDetails;
+                        userData.add(userName);
+                        userData.add(String.valueOf(userID));
                     }
                 }
                 database.add(databaseDetails);
             }
         }
         if (userFound) {
+            String userName = userData.get(0);
+            int userID = Integer.parseInt(userData.get(1).concat(userData.get(2)));
             double checkingBalance = Accounts.checkingBalance;
             int overdraftCount = Integer.parseInt(overDraftList.get(13));
             boolean isAccountActive = Boolean.parseBoolean(overDraftList.get(14));
@@ -358,9 +439,10 @@ public class Customer extends UserDetails implements Bank {
             } else if (checkingBalance < 0 && amountWithdraw > checkingBalance) {
                 double overdraftCharge = amountWithdraw + 35;
                 double balanceWithdrawChecking = checkingBalance - overdraftCharge;
+                displayTransactionData(userName, userID, "overdraft", overdraftCharge, balanceWithdrawChecking, "checking");
                 overDraftList.set(4, String.valueOf(balanceWithdrawChecking));
                 overdraftCount++;
-                overDraftList.set(13, String.valueOf(overdraftCount));
+                overDraftList.set(14, String.valueOf(overdraftCount));
                 System.out.println("you have withdrawn more than available from your account: " + amountWithdraw + "your current balance after overdraft protection fee is: " + balanceWithdrawChecking);
                 if (overdraftCount>=2) {
                     overDraftList.set(14, String.valueOf(false));
@@ -374,4 +456,5 @@ public class Customer extends UserDetails implements Bank {
             }
         }
     }
+
 }

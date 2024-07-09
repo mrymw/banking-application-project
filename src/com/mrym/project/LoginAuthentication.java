@@ -6,6 +6,7 @@ public class LoginAuthentication extends UserDetails{
     static String userName;
     static String userPassword;
     static String userRole;
+    static int userID;
     static Encryption encryption = new Encryption();
     public static void authentication(LoginDetails userDetails) throws Exception {
         Scanner input = new Scanner(System.in);
@@ -17,6 +18,7 @@ public class LoginAuthentication extends UserDetails{
         userName = details.get(1);
         userPassword = details.get(2);
         userRole = details.get(5);
+        userID = Integer.parseInt(details.get(0));
         if (userName.equals(userDetails.getUserName()) && userPassword.equals(userDetails.getUserPassword())) {
             System.out.println("user found");
             if (userRole.equals("C")) {
@@ -61,6 +63,7 @@ public class LoginAuthentication extends UserDetails{
         System.out.println("2. Withdraw Money");
         System.out.println("3. Deposit Money");
         System.out.println("4. Transfer Money");
+        System.out.println("5. View Detailed Account Statement");
         int answer = input.nextInt();
         switch (answer) {
             case 1:
@@ -112,6 +115,9 @@ public class LoginAuthentication extends UserDetails{
                 double amountTransfer = input.nextDouble();
                 banker.transfer(details, amountTransfer);
                 break;
+            case 5:
+                banker.detailedAccountStatement(details);
+                break;
             default:
                 System.out.println("Invalid Option");
         }
@@ -123,6 +129,7 @@ public class LoginAuthentication extends UserDetails{
         System.out.println("1. Withdraw Money");
         System.out.println("2. Deposit Money");
         System.out.println("3. Transfer Money");
+        System.out.println("4. View Detailed Account Statement");
         int answer = input.nextInt();
         Customer customer = new Customer();
         switch (answer) {
@@ -140,6 +147,9 @@ public class LoginAuthentication extends UserDetails{
                 System.out.println("Transfer Amount: ");
                 double amountTransfer = input.nextDouble();
                 customer.transfer(details, amountTransfer);
+                break;
+            case 4:
+                customer.detailedAccountStatement(details);
                 break;
             default:
                 System.out.println("Invalid Option");
