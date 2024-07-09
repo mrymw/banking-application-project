@@ -1,19 +1,15 @@
 package com.mrym.project;
-import javax.swing.text.DateFormatter;
 import java.io.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Customer extends UserDetails implements Bank {
     boolean isPositive;
     static String userName;
     static int userID;
+    static String userCheckingCardType;
+    static String userSavingCardType;
     List<String> userData = new ArrayList<>();
     static String fileName;
     private void displayTransactionData(String userName, int userID, String transactionType, double amount, double balanceAfter, String accountType) throws IOException {
@@ -22,7 +18,7 @@ public class Customer extends UserDetails implements Bank {
             //display current date of the transaction
             LocalTime localTime = LocalTime.now();
             LocalDate localDate = LocalDate.now();
-            String transactionDetails = String.format("%s, %s, %s, %.2f, %.2f%n, %s", localDate, localTime,  transactionType, amount, balanceAfter, accountType);
+            String transactionDetails = String.format("%s, %s, %s, %.2f, %.2f, %s%n", localDate, localTime,  transactionType, amount, balanceAfter, accountType);
             bufferedWriter.write(transactionDetails);
         }
     }
@@ -55,6 +51,7 @@ public class Customer extends UserDetails implements Bank {
         Scanner input = new Scanner(System.in);
         List<List<String>> database = new ArrayList<>();
         boolean userFound = false;
+
         //reading the file
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader("database.txt"))) {
             String user;
@@ -63,11 +60,15 @@ public class Customer extends UserDetails implements Bank {
                 if (databaseDetails.size() > 12) {
                     userName = databaseDetails.get(1).concat(databaseDetails.get(2));
                     userID = Integer.parseInt(databaseDetails.get(0));
+                    userCheckingCardType = databaseDetails.get(9);
+                    userSavingCardType = databaseDetails.get(10);
                     if (details.getUserName().equals(userName)) {
                         userFound = true;
                         withdrawList = databaseDetails;
                         userData.add(userName);
                         userData.add(String.valueOf(userID));
+                        userData.add(String.valueOf(userCheckingCardType));
+                        userData.add(String.valueOf(userSavingCardType));
                     }
                 }
                 database.add(databaseDetails);
@@ -76,18 +77,32 @@ public class Customer extends UserDetails implements Bank {
         if (userFound) {
             String userName = userData.get(0);
             int userID = Integer.parseInt(userData.get(1));
+            String checkingCard = userData.get(2);
+            String savingCard = userData.get(3);
             Accounts.checkingAccount(details);
             Accounts.savingAccount(details);
             double checkingBalance = Accounts.checkingBalance;
             double savingBalance = Accounts.savingBalance;
             System.out.println(checkingBalance);
+            System.out.println(checkingCard);
             if (amountWithdraw < 0) {
                 System.out.println("ERROR NEGATIVE NUMBER!");
                 isPositive = false;
             }
+
             System.out.println("would you like to withdraw money from checking or saving account?");
             String answer = input.next().toLowerCase();
             if (answer.equals("checking")) {
+                Map<String, Double> limits = Cards.getLimits(checkingCard);
+                if (limits != null) {
+                    Double withdrawLimit = limits.get("withdraw");
+                    if (amountWithdraw > withdrawLimit) {
+                        System.out.println("Withdrawal amount exceeds card limit.");
+                        return false;
+                    }
+                } else {
+                    System.out.println("Card type not recognized.");
+                }
                 double balanceWithdrawChecking;
                 if (checkingBalance >= amountWithdraw) {
                     balanceWithdrawChecking = checkingBalance - amountWithdraw;
@@ -100,6 +115,16 @@ public class Customer extends UserDetails implements Bank {
                     overdraftProtection(details, amountWithdraw);
                 }
             } else if (answer.equals("saving")) {
+                Map<String, Double> limits = Cards.getLimits(savingCard);
+                if (limits != null) {
+                    Double withdrawLimit = limits.get("withdraw");
+                    if (amountWithdraw > withdrawLimit) {
+                        System.out.println("Withdrawal amount exceeds card limit.");
+                        return false;
+                    }
+                } else {
+                    System.out.println("Card type not recognized.");
+                }
                 double balanceWithdrawSaving;
                 if (savingBalance >= amountWithdraw) {
                     balanceWithdrawSaving = savingBalance - amountWithdraw;
@@ -134,11 +159,15 @@ public class Customer extends UserDetails implements Bank {
                 if (databaseDetails.size() > 12) {
                     userName = databaseDetails.get(1).concat(databaseDetails.get(2));
                     userID = Integer.parseInt(databaseDetails.get(0));
+                    userCheckingCardType = databaseDetails.get(9);
+                    userSavingCardType = databaseDetails.get(10);
                     if (details.getUserName().equals(userName)) {
                         userFound = true;
                         depositList = databaseDetails;
                         userData.add(userName);
                         userData.add(String.valueOf(userID));
+                        userData.add(String.valueOf(userCheckingCardType));
+                        userData.add(String.valueOf(userSavingCardType));
                     }
                 }
                 database.add(databaseDetails);
@@ -153,6 +182,8 @@ public class Customer extends UserDetails implements Bank {
         double savingBalance = Accounts.savingBalance;
         String userName = userData.get(0);
         int userID = Integer.parseInt(userData.get(1));
+        String checkingCard = userData.get(2);
+        String savingCard = userData.get(3);
         System.out.println(checkingBalance);
         if (amountDeposit < 0) {
             System.out.println("ERROR NEGATIVE NUMBER!");
@@ -161,6 +192,16 @@ public class Customer extends UserDetails implements Bank {
         System.out.println("would you like to deposit to checking or saving account?");
         String answer = input.next().toLowerCase();
         if (answer.equals("checking")) {
+            Map<String, Double> limits = Cards.getLimits(checkingCard);
+            if (limits != null) {
+                Double depositLimit = limits.get("deposit");
+                if (amountDeposit > depositLimit) {
+                    System.out.println("Deposit amount exceeds card limit.");
+                    return false;
+                }
+            } else {
+                System.out.println("Card type not recognized.");
+            }
             double balanceDepositChecking;
             if (checkingBalance >= amountDeposit){
                 balanceDepositChecking = checkingBalance + amountDeposit;
@@ -170,6 +211,16 @@ public class Customer extends UserDetails implements Bank {
 
             }
         } else if (answer.equals("saving")) {
+            Map<String, Double> limits = Cards.getLimits(savingCard);
+            if (limits != null) {
+                Double depositLimit = limits.get("deposit");
+                if (amountDeposit > depositLimit) {
+                    System.out.println("Deposit amount exceeds card limit.");
+                    return false;
+                }
+            } else {
+                System.out.println("Card type not recognized.");
+            }
             double balanceDepositSaving;
             if (savingBalance >= amountDeposit) {
                 balanceDepositSaving = savingBalance - amountDeposit;
@@ -205,11 +256,15 @@ public class Customer extends UserDetails implements Bank {
                 if (databaseDetails.size() > 12) {
                     userName = databaseDetails.get(1).concat(databaseDetails.get(2));
                     userID = Integer.parseInt(databaseDetails.get(0));
+                    userCheckingCardType = databaseDetails.get(9);
+                    userSavingCardType = databaseDetails.get(10);
                     if (details.getUserName().equals(userName)) {
                         userFound = true;
                         transferList = databaseDetails;
                         userData.add(userName);
                         userData.add(String.valueOf(userID));
+                        userData.add(String.valueOf(userCheckingCardType));
+                        userData.add(String.valueOf(userSavingCardType));
                     }
                 }
                 database.add(databaseDetails);
@@ -219,6 +274,8 @@ public class Customer extends UserDetails implements Bank {
         if (!userFound) {
             throw new Exception("User not found in database");
         }
+        String checkingCard = userData.get(2);
+        String savingCard = userData.get(3);
         String userName = userData.get(0);
         int userID = Integer.parseInt(userData.get(1));
         Accounts.checkingAccount(details);
@@ -242,6 +299,16 @@ public class Customer extends UserDetails implements Bank {
                 System.out.println("2. From saving to checking");
                 int choice = input.nextInt();
                 if (choice == 1) {
+                    Map<String, Double> limits = Cards.getLimits(checkingCard);
+                    if (limits != null) {
+                        Double transferLimit = limits.get("transferOwnAccount");
+                        if (amountTransfer > transferLimit) {
+                            System.out.println("Transfer amount exceeds card limit.");
+                            return false;
+                        }
+                    } else {
+                        System.out.println("Card type not recognized.");
+                    }
                     double transferBalanceChecking = checkingBalance - amountTransfer;
                     double transferBalanceSaving = savingBalance + amountTransfer;
                     transferList.set(4, String.valueOf(transferBalanceChecking));
@@ -251,6 +318,16 @@ public class Customer extends UserDetails implements Bank {
                     displayTransactionData(userName, userID, "transfer", amountTransfer, transferBalanceChecking, "checking");
                     displayTransactionData(userName, userID, "transfer", amountTransfer, transferBalanceSaving, "saving");
                 } else if (choice == 2) {
+                    Map<String, Double> limits = Cards.getLimits(savingCard);
+                    if (limits != null) {
+                        Double transferLimit = limits.get("transferOwnAccount");
+                        if (amountTransfer > transferLimit) {
+                            System.out.println("Transfer amount exceeds card limit.");
+                            return false;
+                        }
+                    } else {
+                        System.out.println("Card type not recognized.");
+                    }
                     double transferBalanceSaving = savingBalance - amountTransfer;
                     double transferBalanceChecking = checkingBalance + amountTransfer;
                     transferList.set(5, String.valueOf(transferBalanceSaving));
@@ -267,6 +344,16 @@ public class Customer extends UserDetails implements Bank {
                 System.out.println("2. Saving");
                 int userTransferChoice = input.nextInt();
                 if (userTransferChoice == 1) {
+                    Map<String, Double> limits = Cards.getLimits(checkingCard);
+                    if (limits != null) {
+                        Double transferLimit = limits.get("transfer");
+                        if (amountTransfer > transferLimit) {
+                            System.out.println("Transfer amount exceeds card limit.");
+                            return false;
+                        }
+                    } else {
+                        System.out.println("Card type not recognized.");
+                    }
                     System.out.println("1. Transfer through IBAN");
                     System.out.println("2. Transfer through Phone Number");
                     int transferChoice = input.nextInt();
@@ -302,6 +389,16 @@ public class Customer extends UserDetails implements Bank {
                             System.out.println("IBAN doesn't exist");
                         }
                     } else if (transferChoice == 2) {
+                        Map<String, Double> choiceLimits = Cards.getLimits(savingCard);
+                        if (choiceLimits != null) {
+                            Double transferLimit = choiceLimits.get("transfer");
+                            if (amountTransfer > transferLimit) {
+                                System.out.println("Transfer amount exceeds card limit.");
+                                return false;
+                            }
+                        } else {
+                            System.out.println("Card type not recognized.");
+                        }
                         System.out.println("Enter phone number:");
                         String phoneNum = input.next().toUpperCase();
                         for (List<String> userRecord : database) {
@@ -411,7 +508,7 @@ public class Customer extends UserDetails implements Bank {
             String user;
             while ((user = bufferedReader.readLine()) != null) {
                 List<String> databaseDetails = new ArrayList<>(Arrays.asList(user.split(",")));
-                if (databaseDetails.size() > 12) {
+                if (databaseDetails.size() > 14) {
                     userName = databaseDetails.get(1).concat(databaseDetails.get(2));
                     userID = Integer.parseInt(databaseDetails.get(0));
                     if (loginDetails.getUserName().equals(userName)) {
@@ -426,7 +523,7 @@ public class Customer extends UserDetails implements Bank {
         }
         if (userFound) {
             String userName = userData.get(0);
-            int userID = Integer.parseInt(userData.get(1).concat(userData.get(2)));
+            int userID = Integer.parseInt(userData.get(1));
             double checkingBalance = Accounts.checkingBalance;
             int overdraftCount = Integer.parseInt(overDraftList.get(13));
             boolean isAccountActive = Boolean.parseBoolean(overDraftList.get(14));
