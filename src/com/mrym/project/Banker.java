@@ -540,10 +540,8 @@ public class Banker extends UserDetails implements Bank {
         if (userFound) {
             String userName = userData.get(0);
             int userID = Integer.parseInt(userData.get(1));
-            double checkingBalance = Double.parseDouble(database.get(0).get(4)); // Assuming index 4 is checking account balance
-            boolean isAccountActive = Boolean.parseBoolean(database.get(0).get(14)); // Assuming index 14 is account active status
-
-
+            double checkingBalance = Double.parseDouble(database.get(0).get(4));
+            boolean isAccountActive = Boolean.parseBoolean(database.get(0).get(14));
             if (!isAccountActive) {
                 System.out.println("Account is deactivated. Deposit money to activate it.");
                 return;
@@ -554,14 +552,11 @@ public class Banker extends UserDetails implements Bank {
             } else if (checkingBalance < 0 && amountWithdraw > Math.abs(checkingBalance)) {
                 double overdraftCharge = amountWithdraw + 35;
                 double balanceAfterOverdraft = checkingBalance - overdraftCharge;
-                // Update balance in database
                 database.get(0).set(4, String.valueOf(balanceAfterOverdraft));
-                // Log transaction
                 displayTransactionData(userName, userID, "overdraft", overdraftCharge, balanceAfterOverdraft, "checking");
                 System.out.println("You have withdrawn more than available from your account: " + amountWithdraw + ". Your current balance after overdraft protection fee is: " + balanceAfterOverdraft);
             }
         }
-        // Write updated data back to the database file
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("database.txt"))) {
             for (List<String> record : database) {
                 bufferedWriter.write(String.join(",", record));

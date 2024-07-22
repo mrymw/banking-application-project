@@ -15,9 +15,8 @@ public class Main {
         LoginAuthentication.authentication(details);
         FilterTransaction filterTransaction = new FilterTransaction();
 
-        // Load transactions
+
         filterTransaction.filter(details);
-        // Print transactions
         System.out.println("Today's Transactions: " + filterTransaction.filterToday());
         System.out.println("Yesterday's Transactions: " + filterTransaction.filterYesterday());
         System.out.println("Last 7 Days Transactions: " + filterTransaction.filterLast7Days());

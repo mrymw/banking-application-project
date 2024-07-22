@@ -509,14 +509,14 @@ public class Customer extends UserDetails implements Bank {
             String user;
             while ((user = bufferedReader.readLine()) != null) {
                 List<String> databaseDetails = new ArrayList<>(Arrays.asList(user.split(",")));
-                if (databaseDetails.size() > 12) { // Assuming this is the minimum size to contain necessary data
+                if (databaseDetails.size() > 12) {
                     String userName = databaseDetails.get(1).concat(databaseDetails.get(2));
                     int userID = Integer.parseInt(databaseDetails.get(0));
                     if (loginDetails.getUserName().equals(userName)) {
                         userFound = true;
                         userData.add(userName);
                         userData.add(String.valueOf(userID));
-                        database.add(databaseDetails); // Add to database for potential update
+                        database.add(databaseDetails);
                     }
                 }
             }
@@ -525,31 +525,22 @@ public class Customer extends UserDetails implements Bank {
         if (userFound) {
             String userName = userData.get(0);
             int userID = Integer.parseInt(userData.get(1));
-            double checkingBalance = Double.parseDouble(database.get(0).get(4)); // Assuming index 4 is checking account balance
-            boolean isAccountActive = Boolean.parseBoolean(database.get(0).get(14)); // Assuming index 14 is account active status
-
-
+            double checkingBalance = Double.parseDouble(database.get(0).get(4));
+            boolean isAccountActive = Boolean.parseBoolean(database.get(0).get(12));
             if (!isAccountActive) {
                 System.out.println("Account is deactivated. Deposit money to activate it.");
                 return;
             }
-            // Implement overdraft protection logic
             if (checkingBalance < 0 && amountWithdraw > 100) {
                 System.out.println("Cannot withdraw more than $100 if account balance is negative.");
             } else if (checkingBalance < 0 && amountWithdraw > Math.abs(checkingBalance)) {
                 double overdraftCharge = amountWithdraw + 35;
                 double balanceAfterOverdraft = checkingBalance - overdraftCharge;
-
-                // Update balance in database
                 database.get(0).set(4, String.valueOf(balanceAfterOverdraft));
-
-                // Log transaction
                 displayTransactionData(userName, userID, "overdraft", overdraftCharge, balanceAfterOverdraft, "checking");
-
                 System.out.println("You have withdrawn more than available from your account: " + amountWithdraw + ". Your current balance after overdraft protection fee is: " + balanceAfterOverdraft);
             }
         }
-        // Write updated data back to the database file
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("database.txt"))) {
             for (List<String> record : database) {
                 bufferedWriter.write(String.join(",", record));
